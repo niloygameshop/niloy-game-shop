@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Niloy Game Shop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:#0f172a;font-family:sans-serif}.nav-active{background:#06b6d4;color:white!important}</style>
+</head>
+<body class="text-white pb-20">
+<header class="bg-slate-900 p-4 flex justify-between items-center sticky top-0 z-50 border-b border-slate-800">
+<h1 class="font-bold text-lg">Niloy Game Shop</h1>
+<div class="flex items-center gap-3"><div class="bg-slate-800 px-3 py-1 rounded-full text-sm border border-slate-700"><i class="fa-solid fa-wallet text-cyan-400"></i> <span id="walletBalanceTop">0</span> TK</div><button onclick="openAdmin()" class="bg-slate-800 p-2 rounded-full"><i class="fa-solid fa-user-gear"></i></button></div>
+</header>
+<div class="max-w-6xl mx-auto">
+<div id="adContainer" class="p-4"><div id="adBox" class="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hidden"><img id="adImage" class="w-full h-[150px] object-cover"><p id="adText" class="p-3 text-sm text-center"></p></div></div>
+<div id="noticeBox" class="mx-4 bg-yellow-500/20 border border-yellow-500 text-yellow-400 text-center py-2 rounded-xl text-sm mb-2 hidden"></div>
+<div id="page-home" class="p-4"><h2 class="font-bold mb-3">All Packages</h2><div id="productList" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div></div>
+<div id="page-wallet" class="hidden p-4">
+<div class="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-6"><p class="opacity-80">Your Wallet Balance</p><h1 class="text-4xl font-bold mt-2"><span id="walletBalanceMain">0</span> TK</h1></div>
+<div class="bg-slate-800 rounded-2xl p-5 mt-4 border border-slate-700">
+<h3 class="font-bold mb-1">Add Money</h3><p class="text-xs opacity-60 mb-4">Send Money to 01880502063 - bKash / Nagad</p>
+<input id="addAmount" type="number" placeholder="Amount" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3">
+<select id="addMethod" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3"><option>bKash</option><option>Nagad</option></select>
+<input id="addTrx" placeholder="TrxID" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700">
+<button onclick="submitAddMoney()" class="w-full bg-cyan-500 py-3 rounded-xl font-bold mt-4">Submit</button>
+</div><div id="addMoneyHistory" class="mt-4"></div></div>
+<div id="page-history" class="hidden p-4"><h2 class="font-bold mb-3">Order History</h2><div id="orderHistoryList"></div></div>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-around py-2 z-50">
+<button onclick="switchPage('home')" id="nav-home" class="nav-active flex flex-col items-center px-6 py-1 rounded-xl text-slate-400"><i class="fa-solid fa-house"></i><span class="text-xs mt-1">Home</span></button>
+<button onclick="switchPage('wallet')" id="nav-wallet" class="flex flex-col items-center px-6 py-1 rounded-xl text-slate-400"><i class="fa-solid fa-wallet"></i><span class="text-xs mt-1">Wallet</span></button>
+<button onclick="switchPage('history')" id="nav-history" class="flex flex-col items-center px-6 py-1 rounded-xl text-slate-400"><i class="fa-solid fa-clock-rotate-left"></i><span class="text-xs mt-1">History</span></button>
+</nav>
+<div id="buyModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-[100] p-4"><div class="bg-slate-800 rounded-2xl p-6 w-full max-w-sm"><h3 id="modalProductName" class="font-bold"></h3><p id="modalProductPrice" class="text-cyan-400 font-bold"></p><input id="playerIdInput" placeholder="Enter Player ID" class="w-full mt-4 p-3 rounded-xl bg-slate-900 border border-slate-700"><div class="flex gap-2 mt-4"><button onclick="closeBuy()" class="flex-1 bg-slate-700 py-3 rounded-xl">Cancel</button><button onclick="confirmBuy()" class="flex-1 bg-cyan-500 py-3 rounded-xl font-bold">Buy</button></div><p id="buyError" class="text-red-400 text-sm mt-2 hidden"></p></div></div>
+<div id="adminPanel" class="fixed inset-0 bg-[#0f172a] z-[200] hidden overflow-y-auto"><div class="p-4 max-w-6xl mx-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Admin Panel</h2><button onclick="closeAdmin()" class="bg-red-500 px-4 py-2 rounded-xl">Close</button></div>
+<div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+<button id="btn-products" onclick="showAdminTab('products')" class="admin-tab bg-cyan-500 px-5 py-2 rounded-full">Products</button>
+<button id="btn-ads" onclick="showAdminTab('ads')" class="admin-tab bg-slate-700 px-5 py-2 rounded-full">Ads / Notice</button>
+<button id="btn-addmoney" onclick="showAdminTab('addmoney')" class="admin-tab bg-slate-700 px-5 py-2 rounded-full">Add Money <span id="addMoneyPending" class="bg-yellow-500 text-black px-2 rounded-full ml-1">0</span></button>
+<button id="btn-orders" onclick="showAdminTab('orders')" class="admin-tab bg-slate-700 px-5 py-2 rounded-full">Orders <span id="orderPending" class="bg-yellow-500 text-black px-2 rounded-full ml-1">0</span></button>
+<button id="btn-password" onclick="showAdminTab('password')" class="admin-tab bg-slate-700 px-5 py-2 rounded-full">Password</button>
+</div>
+<div id="admin-products" class="bg-slate-800 rounded-xl p-4"><div id="adminProductList" class="space-y-2"></div></div>
+<div id="admin-ads" class="hidden bg-slate-800 rounded-xl p-4 space-y-3"><input id="adImageInput" placeholder="Banner Image Link" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700"><input id="adTextInput" placeholder="Ad Text" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700"><button onclick="saveAd()" class="w-full bg-cyan-500 py-3 rounded-xl font-bold">Save Ad</button><button onclick="clearAd()" class="w-full bg-slate-700 py-2 rounded-xl">Remove Ad</button><hr class="border-slate-700"><input id="noticeInput" placeholder="Notice Text" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700"><button onclick="saveNotice()" class="w-full bg-yellow-500 text-black py-3 rounded-xl font-bold">Save Notice</button><button onclick="clearNotice()" class="w-full bg-slate-700 py-2 rounded-xl">Remove Notice</button></div>
+<div id="admin-addmoney" class="hidden bg-slate-800 rounded-xl p-4"><div id="adminAddMoneyList"></div></div>
+<div id="admin-orders" class="hidden bg-slate-800 rounded-xl p-4"><div id="adminOrderList"></div></div>
+<div id="admin-password" class="hidden bg-slate-800 rounded-xl p-4"><h3 class="font-bold mb-3">Change Password</h3><input id="newPassInput" placeholder="নতুন পাসওয়ার্ড" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700"><button onclick="changePassword()" class="w-full bg-cyan-500 py-3 rounded-xl font-bold mt-3">Save</button><p class="text-xs opacity-60 mt-3">Current: <span id="currentPassShow" class="text-cyan-400"></span></p></div>
+<footer class="text-center py-6 opacity-70 text-sm mt-10">Niloy Game Shop - 01880502063</footer>
+</div></div>
+<script>
+const HIDDEN_MARKUP = 7;
+let products = JSON.parse(localStorage.getItem('niloyProductsBase')||'null') || [{id:1,name:"25 Diamond",base:22},{id:2,name:"50 Diamond",base:37},{id:3,name:"115 Diamond",base:79},{id:4,name:"240 Diamond",base:158},{id:5,name:"355 Diamond",base:237},{id:6,name:"505 Diamond",base:336},{id:7,name:"610 Diamond",base:400},{id:8,name:"850 Diamond",base:558},{id:9,name:"1090 Diamond",base:710},{id:10,name:"Weekly",base:158},{id:11,name:"Monthly",base:790}];
+let walletBalance = parseInt(localStorage.getItem('niloyWallet')||'0');
+let addMoneyReqs = JSON.parse(localStorage.getItem('niloyAddMoney')||'[]');
+let orders = JSON.parse(localStorage.getItem('niloyOrders')||'[]');
+let selectedProduct=null;
+function getFinalPrice(b){return b+HIDDEN_MARKUP}
+function switchPage(p){document.getElementById('page-home').classList.add('hidden');document.getElementById('page-wallet').classList.add('hidden');document.getElementById('page-history').classList.add('hidden');document.getElementById('page-'+p).classList.remove('hidden');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('nav-active'));document.getElementById('nav-'+p).classList.add('nav-active');if(p==='history')renderHistory();if(p==='wallet')renderWalletHistory()}
+function renderProducts(){document.getElementById('productList').innerHTML=products.map(p=>`<div class="bg-slate-800 rounded-2xl p-4 border border-slate-700"><h3 class="font-bold text-sm">${p.name}</h3><p class="font-bold text-cyan-400 mt-1">${getFinalPrice(p.base)} TK</p><button onclick="openBuy(${p.id})" class="w-full mt-3 bg-cyan-500 py-2 rounded-xl text-sm font-bold">Buy Now</button></div>`).join('');document.getElementById('adminProductList').innerHTML=products.map(p=>`<div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl text-sm gap-2"><span class="flex-1">${p.name}</span><input type="number" id="base-${p.id}" value="${p.base}" class="w-16 bg-slate-800 p-1 rounded text-center border border-slate-700"><span class="text-cyan-400 font-bold">${getFinalPrice(p.base)}</span><button onclick="updateBase(${p.id})" class="bg-green-600 px-3 py-1 rounded">Save</button></div>`).join('');updateWalletUI();renderAds()}
+function updateWalletUI(){document.getElementById('walletBalanceTop').innerText=walletBalance;document.getElementById('walletBalanceMain').innerText=walletBalance;localStorage.setItem('niloyWallet',walletBalance)}
+function openBuy(id){selectedProduct=products.find(p=>p.id===id);document.getElementById('modalProductName').innerText=selectedProduct.name;document.getElementById('modalProductPrice').innerText=getFinalPrice(selectedProduct.base)+' TK';document.getElementById('buyError').classList.add('hidden');document.getElementById('buyModal').classList.remove('hidden');document.getElementById('buyModal').classList.add('flex')}
+function closeBuy(){document.getElementById('buyModal').classList.add('hidden')}
+function confirmBuy(){const pid=document.getElementById('playerIdInput').value.trim();if(!pid)return alert('Player ID দিন');const price=getFinalPrice(selectedProduct.base);if(walletBalance<price){document.getElementById('buyError').innerText=`Wallet এ ${price} TK নেই।`;document.getElementById('buyError').classList.remove('hidden');return}walletBalance-=price;updateWalletUI();orders.unshift({id:Date.now(),product:selectedProduct.name,price:price,playerId:pid,status:'pending',time:new Date().toLocaleString()});localStorage.setItem('niloyOrders',JSON.stringify(orders));closeBuy();document.getElementById('playerIdInput').value='';switchPage('history');renderAdminOrders()}
+function submitAddMoney(){const amt=parseInt(document.getElementById('addAmount').value);const method=document.getElementById('addMethod').value;const trx=document.getElementById('addTrx').value.trim();if(!amt||!trx)return alert('Amount ও TrxID দিন');addMoneyReqs.unshift({id:Date.now(),amount:amt,method:method,trx:trx,status:'pending',time:new Date().toLocaleString()});localStorage.setItem('niloyAddMoney',JSON.stringify(addMoneyReqs));document.getElementById('addAmount').value='';document.getElementById('addTrx').value='';alert('Request পাঠানো হয়েছে');renderWalletHistory();renderAdminAddMoney()}
+function renderWalletHistory(){document.getElementById('addMoneyHistory').innerHTML='<h3 class="font-bold mt-4 mb-2">History</h3>'+addMoneyReqs.map(r=>`<div class="bg-slate-800 p-3 rounded-xl mb-2 flex justify-between text-sm"><div><p class="font-bold">${r.amount} TK - ${r.method}</p><p class="text-xs opacity-60">${r.trx}</p></div><span class="px-2 py-1 rounded-full text-xs h-fit ${r.status==='pending'?'bg-yellow-500 text-black':r.status==='accepted'?'bg-green-500':'bg-red-500'}">${r.status}</span></div>`).join('')}
+function renderHistory(){document.getElementById('orderHistoryList').innerHTML=orders.length?orders.map(r=>`<div class="bg-slate-800 p-4 rounded-xl mb-2 flex justify-between text-sm"><div><p class="font-bold">${r.product} - ${r.playerId}</p><p class="text-xs opacity-60">${r.time}</p></div><span class="px-3 py-1 rounded-full text-xs h-fit ${r.status==='pending'?'bg-yellow-500 text-black':r.status==='accepted'?'bg-green-500':'bg-red-500'}">${r.status}</span></div>`).join(''):'<p class="text-center opacity-60 py-10">No Orders</p>'}
+function openAdmin(){const saved=localStorage.getItem('niloyAdminPass')||'niloy123';const p=prompt('Admin Password:');if(p!==saved)return alert('Wrong');document.getElementById('adminPanel').classList.remove('hidden');document.getElementById('currentPassShow').innerText=saved;renderAdminAddMoney();renderAdminOrders();showAdminTab('products')}
+function closeAdmin(){document.getElementById('adminPanel').classList.add('hidden')}
+function showAdminTab(t){['products','ads','addmoney','orders','password'].forEach(x=>document.getElementById('admin-'+x).classList.add('hidden'));document.getElementById('admin-'+t).classList.remove('hidden');document.querySelectorAll('.admin-tab').forEach(b=>{b.classList.remove('bg-cyan-500');b.classList.add('bg-slate-700')});const activeBtn=document.getElementById('btn-'+t);if(activeBtn){activeBtn.classList.remove('bg-slate-700');activeBtn.classList.add('bg-cyan-500')}}
+function updateBase(id){const v=parseInt(document.getElementById('base-'+id).value);products=products.map(p=>p.id===id?{...p,base:v}:p);localStorage.setItem('niloyProductsBase',JSON.stringify(products));renderProducts()}
+function renderAds(){const img=localStorage.getItem('niloyAdImage');const txt=localStorage.getItem('niloyAdText');const notice=localStorage.getItem('niloyNotice');if(img){document.getElementById('adBox').classList.remove('hidden');document.getElementById('adImage').src=img;document.getElementById('adText').innerText=txt||''} if(notice){document.getElementById('noticeBox').classList.remove('hidden');document.getElementById('noticeBox').innerText=notice}}
+function saveAd(){const img=document.getElementById('adImageInput').value.trim();const txt=document.getElementById('adTextInput').value.trim();if(!img)return alert('Image Link দিন');localStorage.setItem('niloyAdImage',img);localStorage.setItem('niloyAdText',txt);renderAds();alert('Ad Saved')}
+function clearAd(){localStorage.removeItem('niloyAdImage');localStorage.removeItem('niloyAdText');document.getElementById('adBox').classList.add('hidden')}
+function saveNotice(){const t=document.getElementById('noticeInput').value.trim();if(!t)return alert('Notice লিখুন');localStorage.setItem('niloyNotice',t);renderAds();alert('Notice Saved')}
+function clearNotice(){localStorage.removeItem('niloyNotice');document.getElementById('noticeBox').classList.add('hidden')}
+function changePassword(){const np=document.getElementById('newPassInput').value;if(!np)return alert('পাসওয়ার্ড লিখো');localStorage.setItem('niloyAdminPass',np);document.getElementById('currentPassShow').innerText=np;document.getElementById('newPassInput').value='';alert('Done ✅ New: '+np)}
+function renderAdminAddMoney(){document.getElementById('addMoneyPending').innerText=addMoneyReqs.filter(r=>r.status==='pending').length;document.getElementById('adminAddMoneyList').innerHTML=addMoneyReqs.length?addMoneyReqs.map(r=>`<div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-2"><p class="font-bold">${r.amount} TK - ${r.method} - ${r.trx}</p><div class="flex gap-2 mt-2"><button onclick="handleAddMoney(${r.id},'accepted')" class="flex-1 bg-green-500 py-2 rounded-xl">Accept</button><button onclick="handleAddMoney(${r.id},'rejected')" class="flex-1 bg-red-500 py-2 rounded-xl">Reject</button></div></div>`).join(''):'No Request'}
+function handleAddMoney(id,status){const req=addMoneyReqs.find(r=>r.id===id);if(status==='accepted'&&req.status!=='accepted'){walletBalance+=req.amount;updateWalletUI()}addMoneyReqs=addMoneyReqs.map(r=>r.id===id?{...r,status}:r);localStorage.setItem('niloyAddMoney',JSON.stringify(addMoneyReqs));renderAdminAddMoney();renderWalletHistory()}
+function renderAdminOrders(){document.getElementById('orderPending').innerText=orders.filter(r=>r.status==='pending').length;document.getElementById('adminOrderList').innerHTML=orders.length?orders.map(r=>`<div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-2"><p class="font-bold">${r.product} - ${r.playerId} - ${r.price} TK</p><div class="flex gap-2 mt-2"><button onclick="updateOrder(${r.id},'accepted')" class="flex-1 bg-green-500 py-2 rounded-xl">Accept</button><button onclick="updateOrder(${r.id},'rejected')" class="flex-1 bg-red-500 py-2 rounded-xl">Reject</button></div></div>`).join(''):'No Orders'}
+function updateOrder(id,status){orders=orders.map(r=>r.id===id?{...r,status}:r);localStorage.setItem('niloyOrders',JSON.stringify(orders));renderAdminOrders();renderHistory()}
+renderProducts();renderWalletHistory();
+</script>
+</body>
+</html>
